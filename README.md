@@ -21,6 +21,6 @@ This toolbox was written by:
 
 ## Papers
 
-[1] Macaky, Johnson and Sansom (2020) How directed is a directed network? ([Paper available here](https://www.rebuildingmacroeconomics.ac.uk/how-directed-is-a-directed-network)).
+[1] MacKay RS, Johnson S, Sansom B. (2020) How directed is a directed network? *R. Soc. Open Sci.* **7**: 201138. ([Paper available here](https://royalsocietypublishing.org/doi/10.1098/rsos.201138)).
 
-[2] Johnson et al. (2014) Trophic coherence determines food-web stability  ([Paper available here](https://www.pnas.org/content/111/50/17923)).
+[2] Johnson S, Domínguez-García V, Donetti L, Muñoz MA. (2014) *PNAS* **111** (50) 17923-17928. ([Paper available here](https://doi.org/10.1073/pnas.1409077111)).
