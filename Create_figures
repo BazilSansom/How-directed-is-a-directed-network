@@ -189,8 +189,7 @@ clear all
 % https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2736650/.
 
 % Upload data and construct adjacency matrix
-yeast=readtable('yeast.xlsx');
-yeast=table2array(yeast); % formatted as edgelist using sting IDs for nodes
+load('yeast.mat')  % formatted as edgelist using sting IDs for nodes
 
 % Classifying node roles
 TF=unique(yeast(:,1)); % transcriptino factors
