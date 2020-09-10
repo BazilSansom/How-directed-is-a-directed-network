@@ -1,5 +1,17 @@
-% Requires
-%   
+% This script provides code needed to reproduce figures presented in the paper 'How directed is a directed network' [1]
+% It makes use of some functions provided in Trophic Analysis Toolbox freely available here:
+% https://github.com/BazilSansom/Trophic-Analysis-Toolbox
+% The necessary data files for running this script are provided for download in this repository and references and links for
+% obtaining the data are also provided both here and in the paper.
+% Please use freely any of these materials. If you use any of these materials in published work or working/discussion papers, 
+% we'd love to hear about your work, and please cite the below paper [1].
+%
+% Contact:
+% bazil.sansom@warwick.ac.uk
+%
+% Reference:
+% [1] MacKay RS, Johnson S, Sansom B. 2020 How directed is a directed network? R. Soc. Open Sci. 7: 201138.
+% http://dx.doi.org/10.1098/rsos.201138
 
 
 %%%%%%%%%%%%%% Fig.1: Ythan estury food web  %%%%%%%%%%%%%%%%%%%%%%%%
@@ -410,6 +422,10 @@ set(gca,'XTick',[])
 title('Feed forward loop')
 xlabel({['Normality=',num2str(round(v_ffl,2))],['Trophic incoherence=',num2str(round(F0_ffl,2))]})
 ylabel('Trophic level')
+
+%% Fig.12-13
+
+% C code file
 
 
 
