@@ -1,0 +1,176 @@
+% Requires
+%   
+
+
+%%%%%%%%%%%%%% Fig.1: Ythan estury food web  %%%%%%%%%%%%%%%%%%%%%%%%
+
+% Data for this figure were downloaded from [48] (see paper) and can be accessed from: 
+% https://datadryad.org/stash/dataset/doi:10.5061/dryad.1mv20r6. 
+
+% Load data and create graph object
+% Ythan estury food web data were obtained from 
+load('Ythan.mat')
+G=digraph(Ythan);
+
+% Extract largest weakly connected component and obtain adjacency matrix
+[bin,binsize] = conncomp(G,'Type','weak');
+idx = binsize(bin) == max(binsize);
+SG = subgraph(G, idx);
+E=table2array(SG.Edges(:,1));
+A=edgelist2adj(E);
+A=A';
+
+% Obtain new trophic levels and incoherence
+[h,F0,~] = incoherence(A); % Obtain new levels (Eq.2.6) and F0 (Eq.2.7)
+
+% Plot network according to new trophic levels
+G=digraph(A);
+figure
+p=plot(G,'layout','layered');
+xdata=get(p,'XData');
+close
+figure(1)
+g=plot(G,'XData',xdata,'YData',h,'EdgeColor',[0.3 0.3 0.3]);
+g.NodeLabel = {};
+highlight(g,1:size(A,1),'NodeColor','b','MarkerSize',6)
+set(gca,'XTick',[],'XLabel',[]);
+ylabel('levels')
+xlabel(['incoherence=',num2str(round(F0,2))])
+title('Ythan estuary food web')
+
+
+%%%%%%%%%%%%%%% Fig.2: Inter-industrial flows in the USA and Saudi economies  %%%%%%%%%%%%%%%%%%%%%%%%%
+
+clear all
+
+% The data used to produce figures 2 and 3 are from the OECD Input-Output Tables 
+% described and available here: 
+% http://www.oecd.org/sti/ind/input-outputtables.htm, from the OECD website. 
+
+% A seperate compiler for this data is provided (filename. Give option to run). 
+% Here just upload precompiled data files.
+load('NATIODOMIMP_nets.mat')
+load('NATIODOMIMP_states.mat')
+load('NATIODOMIMP_industry_labels.mat')
+load('NATIODOMIMP_industries.mat')
+
+IO=NATIODOMIMP_nets;
+COUNTRY=NATIODOMIMP_states;
+indust=NATIODOMIMP_industry_labels;
+
+idx=[58, 49]; % US and Saudi
+
+for j=1:2
+    
+i=idx(j);
+    
+io=IO(:,:,i,end); % end = year 2015
+
+node_weight=sum(io,1)+sum(io,2)';
+node_weight=node_weight./sum(node_weight);
+idx2=node_weight>=0.025;
+sum(idx2)
+mks=node_weight(idx2);
+
+io2=io(:,logical(idx2));
+io2=io2(logical(idx2),:);
+ind2=indust(logical(idx2),1);
+
+[h,Fmin,~,~] = incoherence_gen(io2);
+
+G=digraph(io2);
+G.Nodes.Name=table2array(ind2);
+
+try
+    k = findnode(G,'Accomodation and food services');
+    G.Nodes.Name{k} = 'Accom & Food Services';
+end
+
+k = findnode(G,'Healthcare, socialwork');
+G.Nodes.Name{k} = 'Health & social care';
+k = findnode(G,'Transportation, storage');
+G.Nodes.Name{k} = 'Transport, storage';
+
+figure
+p=plot(G,'layout','force');
+xdata=get(p,'XData');
+close
+
+figure(2)
+subplot(2,1,j)
+LWidths = 5*G.Edges.Weight/max(G.Edges.Weight);
+p=plot(G,'XData',xdata,'YData',h,'NodeLabel',G.Nodes.Name,'LineWidth',LWidths,'ArrowSize',LWidths*5,'MarkerSize',(mks*100),'EdgeColor',[0.7 0.7 0.7],'NodeColor','b','NodeFontSize',9);
+set(gca,'XTick',{})
+ylabel('levels')
+xlabel(['incoherence=',num2str(round(Fmin,2))])
+title(COUNTRY{i})
+
+end
+
+subplot(2,1,1)
+title('US input-output network')
+subplot(2,1,2)
+title('Saudi input-output network')
+
+
+%%%%%%%%%%% Fig.3: Mean levels of different sectors in natioal IO nets. %%%%%%%%%%%%%
+
+clear all
+
+% Load data or run "Build_IO_nets_OECD_data" (both saved to directory)
+
+load('NATIODOMIMP_nets.mat')
+load('NATIODOMIMP_states.mat')
+load('NATIODOMIMP_industry_labels.mat')
+load('NATIODOMIMP_industries.mat')
+
+IO=NATIODOMIMP_nets;
+COUNTRY=NATIODOMIMP_states;
+indust=NATIODOMIMP_industry_labels;
+nCountries=size(COUNTRY,1);
+nIndustries=size(IO(:,:,1,end),1);
+
+% Obtain heights
+
+del=zeros(0);
+
+for i=1:nCountries
+    
+    io=IO(:,:,i,end);
+    try % Some (3) countries have unconnected industries.. rather than dropping industries I drop these countries
+        [H(:,i),F(i),~,~] = incoherence_gen(io,'h0','wm');
+        country{i,1}=COUNTRY{i};
+    catch
+        del=[del;i];
+    end
+  
+end
+
+% Drop three economies with limited data.
+for i=size(del,1):-1:1
+    
+    H(:,del(i))=[];
+    F(del(i))=[];
+    country(del(i),:)=[];
+    
+end
+
+
+% Obtain means and sort
+H4sort=[H,median(H,2)];
+[H_sorted, idx]= sortrows(H4sort,size(H4sort,2));
+names=table2array(indust);
+names=names(idx);
+
+% Plot results
+figure(3)
+boxplot(H_sorted','Labels',names,'LabelOrientation','inline')
+title(['trophic levels of different sectors in IO nets for ', num2str(size(country,1)),' economies'])
+ylabel('levels')
+xlabel('sectors')
+
+
+
+
+
+
