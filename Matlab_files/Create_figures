@@ -169,6 +169,253 @@ title(['trophic levels of different sectors in IO nets for ', num2str(size(count
 ylabel('levels')
 xlabel('sectors')
 
+%%%%%%%%%%%   Fig.4: yeast transcription regulatory network   %%%%%%%%%%%%%%%%%
+
+clear all
+
+% The data for figure 4 were downloaded from [20] here: 
+% https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2736650/.
+
+% Upload data and construct adjacency matrix
+yeast=readtable('yeast.xlsx');
+yeast=table2array(yeast); % formatted as edgelist using sting IDs for nodes
+
+% Classifying node roles
+TF=unique(yeast(:,1)); % transcriptino factors
+TG=unique(yeast(:,2)); % target genes
+dual=intersect(TF,TG); % dual role
+TF_unique=DeleteDuplicates([TF;dual],'str'); % Non dual TF
+
+% Create graph object from sting ID edgelist
+G=digraph(yeast(:,1),yeast(:,2));
+nodes=table2array(G.Nodes);
+in=indegree(G);
+out=outdegree(G);
+
+% Create numerical adjacency matrix from graph object
+[~,e]=tickers2numbers(yeast,nodes);
+A=edgelist2adj(e);
+
+% Obtain new trophic levels (Eq.) and incoherence (Eq.)
+[h,Fmin,~,~]=incoherence(A);
+
+
+% Plot the network
+
+figure(4)
+
+% First using standard force directed layout
+subplot(1,2,1)
+p=plot(G,'layout','force','EdgeColor',[0.6 0.6 0.6],'NodeColor','b');
+highlight(p,TF_unique,'NodeColor','r');
+c=[1.0000    1.0000    0.0667]; 
+highlight(p,dual,'NodeColor',c);
+
+% Then using new trophic levels
+subplot(1,2,2)
+xdata=rand(length(h),1);
+p=plot(G,'XData',xdata,'YData',h,'EdgeColor',[0.6 0.6 0.6],'NodeColor','b');
+highlight(p,TF_unique,'NodeColor','r');
+highlight(p,dual,'NodeColor',c);
+set(gca,'XTick',{})
+xlabel(['Incoherence=',num2str(round(Fmin,2))])
+ylabel('levels')
+
+
+%%%%%%%%%%%    Figure 5: Global book translation network    %%%%%%%%%%%%
+
+clear all
+
+% Upload data and build weighted adjacency matrix
+
+% The data for figure 5 published in [25] were downloaded from 
+% http://language.media.mit.edu/data (navigate from
+% http://language.media.mit.edu)
+% Upload precompiled file
+
+load('book_labels.mat')
+list=book_labels;
+[col1, col2, col3, header,raw ]= tsvread('books_edges.tsv','SourceLanguageName','TargetLanguageName','Coocurrences');
+raw(1,:)=[];
+G=digraph(raw(:,1),raw(:,2));
+nodes=table2array(G.Nodes);             % list of node names
+[V,E]=tickers2numbers(raw(:,1:2),nodes);% convert to numercical IDs
+E(:,3)=str2double(raw(:,3));            % weights
+A=edgelist2adj(E);                      % weighted adjacency matrix
+
+
+% Obtain new trophic levels and incoherence
+[h,Fmin,~,~]=incoherence(A);
+
+
+% PLot network according to new levels
+G=digraph(A);
+LWidths = G.Edges.Weight/max(G.Edges.Weight);
+td=sum(A,1)+sum(A,2)';
+td=td./sum(td);
+
+figure(5)
+p=plot(G,'layout','layered');
+xdat=get(p,'XData');
+p=plot(G,'XData',xdat,'YData',h,'LineWidth',LWidths*10,'ArrowSize',LWidths*10*4,'EdgeColor',[0.5 0.5 0.5],'NodeColor','b','NodeFontSize',9,'MarkerSize',td*100);
+set(gca,'XTick',{})
+xlabel(['Incoherence=',num2str(round(Fmin,2))])
+ylabel('Levels')
+title('Book translations between languages')
+
+ID=zeros(size(list));
+
+for i=1:size(list,1)
+    [lang,idx]=vlookup(nodes,list{i,1},1,1);
+    ID(i)=idx;
+end
+
+labelnode(p,ID,list)
+
+% Color code edges according to their direction (with or against vertical
+% flow)
+
+% Get height differences d=h_t-h_s on each edge
+%   d<0 source higher than targert: down arrow
+%   d>0 source smaller than targer: up arrow
+
+nEdges=size(E,1);
+d=zeros(nEdges,1);
+
+for i=1:nEdges  
+    d(i)=h(E(i,2))-h(E(i,1)); 
+end
+
+% Get edge indices for all up and all down arrows
+
+up_edge=d>0;
+E_up=E(up_edge,:);
+down_edge=d<0;
+E_down=E(down_edge,:);
+
+E_id_up=zeros(size(E_up,1),1);
+
+for i=1:size(E_up,1)
+    [E_id_up(i),~] = findedge(G,E_up(i,1),E_up(i,2));
+end
+
+E_id_down=zeros(size(E_down,1),1);
+
+for i=1:size(E_down,1)
+    [E_id_down(i),~] = findedge(G,E_down(i,1),E_down(i,2));
+end
+
+highlight(p,'Edges',E_id_down,'EdgeColor',[0.9412    0.6471    0.6471])
+highlight(p,'Edges',E_id_up,'EdgeColor',[0.4235    0.6000    0.1725])
+
+
+%%%%%%%%%%%  Fig.6 comparison new and standard levels for a toy sequential process  %%%%%%%%
+
+clear all
+
+net=[1,3; 2,3; 3,5; 4,5; 5,7; 6,7; 7,9; 8,9; 9,11; 10,11];
+a=edgelist2adj(net);
+
+[h,~,~]=incoherence(a);
+[l,~,~]=incoherence_stand(a);
+
+figure
+p=plot(digraph(a));
+xdat=get(p,'XData');
+close
+
+figure(6)
+subplot(1,2,1)
+plot(digraph(a),'XData',xdat,'YData',h+1,'EdgeColor','k','nodecolor','k');
+set(gca,'XTick',[])
+ylabel('new levels')
+
+subplot(1,2,2)
+plot(digraph(a),'XData',xdat,'YData',l,'EdgeColor','k','nodecolor','k');
+ylabel('standard levels')
+set(gca,'XTick',[])
+
+
+%% Fig.7-10
+
+% This data was compiled from Bloomberge LP and coule be provided wit Bloombergs permission, 
+% or similar data could be compiled from Bloomberg.
+
+
+%%%%%%%%%%%%%   Fig.11 Normality vs. F0 motifs  %%%%%%%%%%%%%%%%
+
+clear all
+
+ffl=[1,2; 1,3; 2,3];
+fbl=[1,2; 2,3; 3,1];
+chain=[1,2; 2,3];
+motif_3=[1,2; 2,3; 3,1; 1,1];
+
+g_ffl=digraph(ffl(:,1),ffl(:,2));
+g_fbl=digraph(fbl(:,1),fbl(:,2));
+g_chain=digraph(chain(:,1),chain(:,2));
+g_motif_3=digraph(motif_3(:,1),motif_3(:,2));
+
+W_fbl=edgelist2adj(fbl);
+W_ffl=edgelist2adj(ffl);
+W_chain=edgelist2adj(chain);
+W_motif_3=edgelist2adj(motif_3);
+
+v_fbl=normality(W_fbl);
+v_ffl=normality(W_ffl);
+v_3=normality(W_motif_3);
+v_chain=normality(W_chain);
+
+
+[~,F0_fbl,~]=incoherence(W_fbl);
+[h_ffl,F0_ffl,~]=incoherence(W_ffl);
+[~,F0_3,~]=incoherence(W_motif_3);
+[h_chain,F0_chain,~]=incoherence(W_chain);
+
+figure
+p=plot(g_ffl,'layout','layered');
+x_ffl=get(p,'XData');
+close
+
+figure
+p=plot(g_chain,'layout','layered');
+x_chain=get(p,'XData');
+close
+
+figure(11)
+
+subplot(2,2,1)
+plot(g_fbl,'EdgeColor','k','nodecolor','k','NodeLabel', {})
+set(gca,'XTick',[])
+set(gca,'YTick',[])
+title('Feed back loop')
+xlabel({['Normality=',num2str(round(v_fbl,2))],['Trophic incoherence=',num2str(round(F0_fbl,2))]})
+
+subplot(2,2,3)
+plot(digraph(W_motif_3),'EdgeColor','k','nodecolor','k','NodeLabel', {})
+set(gca,'XTick',[])
+title('Motif 3')
+xlabel({['Normality=',num2str(round(v_3,2))],['Trophic incoherence=',num2str(round(F0_3,2))]})
+
+subplot(2,2,2)
+plot(g_chain,'XData',x_chain,'YData',h_chain,'EdgeColor','k','nodecolor','k','NodeLabel', {})
+set(gca,'XTick',[])
+title('Chain')
+xlabel({['Normality=',num2str(round(v_chain,2))],['Trophic incoherence=',num2str(round(F0_chain,2))]})
+ylabel('Trophic level')
+
+subplot(2,2,4)
+plot(g_ffl,'XData',x_ffl,'YData',h_ffl,'EdgeColor','k','nodecolor','k','NodeLabel', {})
+set(gca,'XTick',[])
+title('Feed forward loop')
+xlabel({['Normality=',num2str(round(v_ffl,2))],['Trophic incoherence=',num2str(round(F0_ffl,2))]})
+ylabel('Trophic level')
+
+
+
+
+
+
 
 
 
