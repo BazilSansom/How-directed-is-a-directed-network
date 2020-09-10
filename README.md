@@ -3,7 +3,7 @@ This repository provides Matlab and C code for reproducing results presented in 
 MacKay RS, Johnson S, Sansom B. (2020) 'How directed is a directed network?' *R. Soc. Open Sci.* **7**: 201138.
 http://dx.doi.org/10.1098/rsos.201138
 
-Matlab code make use of the [*Trophic Analysis Toolbox*](https://github.com/BazilSansom/How-directed-is-a-directed-network/tree/master/Matlab_files) made freely available (see link, and below).
+Matlab code make use of the [*Trophic Analysis Toolbox*](https://github.com/BazilSansom/How-directed-is-a-directed-network/tree/master/Matlab_files) (freely available to download and use. Please cite the above paper).
 
 <img src="TAT_logo.png" width="300"/>
 
