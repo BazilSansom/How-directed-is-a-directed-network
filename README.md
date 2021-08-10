@@ -17,7 +17,6 @@ over time.
 This toolbox was written by:
 - Bazil Sansom (University of Warwick)
 - Samuel Johnson (University of Birmingham)
-- Jose Moran (CAMS/EHESS)
 
 ## Papers
 
